@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP, ScopedTypeVariables #-}
 {-
 Uses pattern guards
 
@@ -23,6 +24,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 -}
 
 module Language.Unlambda where
+
+#if !MIN_VERSION_base(4,6,0)
+import Prelude hiding(catch)
+#endif
+import Control.Exception (catch, IOException)
 
 ------------------------------------------------------------------------
 -- Abstract syntax
@@ -131,7 +137,7 @@ apply (D1 e) x   = do f <- eval e; apply f x
 apply (Dot c) x  = step >> io (putChar c) >> return x
 apply E x        = exit x
 apply At f = do
-  dat <- io $ catch (fmap Just getChar) (const $ return Nothing)
+  dat <- io $ catch (fmap Just getChar) (\(_ :: IOException) -> return Nothing)
   setCurrentChar dat
   apply f (case dat of Nothing -> V ; Just _  -> I)
 apply (Ques c) f = do

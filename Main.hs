@@ -1,9 +1,13 @@
-{-# LANGUAGE PatternGuards #-}
+{-# LANGUAGE CPP, PatternGuards, ScopedTypeVariables #-}
 
 module Main where
 
 -- A time- and output-limited unlambda
 
+#if !MIN_VERSION_base(4,6,0)
+import Prelude hiding(catch)
+#endif
+import Control.Exception (catch, IOException)
 import System.Posix.Resource
 import Data.Char (toLower)
 import System.IO (hGetChar, hGetLine, stdin, Handle())
@@ -28,7 +32,7 @@ run = do
 --
 parse :: Handle -> IO Exp
 parse h = do
-  c <- catch (hGetChar h) (\_ -> error "Parse error at end of file")
+  c <- catch (hGetChar h) (\(_ :: IOException) -> error "Parse error at end of file")
   case toLower c of
     d | d `elem` " \t\n"  -> parse h
     '`' -> do e1 <- parse h
